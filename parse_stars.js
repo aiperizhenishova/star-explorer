@@ -1,5 +1,7 @@
 import fs from 'fs'         //File System (читать файлы, создавать файлы, проверять, существуют ли папки/файлы и тд)
 import Papa from 'papaparse'
+import {convertToXYZ} from './convert_to_xyz.js'
+
 
 //читаем csv с диска
 const file = fs.readFileSync('hipparcos-voidmain.csv', 'utf8')
@@ -45,5 +47,11 @@ Papa.parse(file, {  //это команда библиотеки Papa Parse, к�
 
         console.log('first 5 clean stars:')
         console.log(stars.slice(0,5))      // первые 5 объектов из массива stars
+
+
+        const converter = new convertToXYZ(stars)
+        const xyzStars = converter.convertAll()
+        console.log('first 5 XYZ stars:')
+        console.log(xyzStars.slice(0,5))
     }
 })
