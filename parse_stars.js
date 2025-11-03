@@ -53,5 +53,8 @@ Papa.parse(file, {  //это команда библиотеки Papa Parse, к�
         const xyzStars = converter.convertAll()
         console.log('first 5 XYZ stars:')
         console.log(xyzStars.slice(0,5))
+        console.log('rows:')
+        console.log(stars.length)
+
     }
 })

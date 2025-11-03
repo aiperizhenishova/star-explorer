@@ -5,6 +5,7 @@ class convertToXYZ {
     constructor(stars){        // очищенный массив 
         // здесь мы получаем массив звёзд и сохраняем его в классе
         this.stars = stars
+        this.convertedStars = null    // сюда будем сохранять конвертированные звезды
     }
 
 
@@ -33,10 +34,12 @@ class convertToXYZ {
 
 
         //преобраз в x y z
-        const x = distance * Math.cos(decRad) * Math.cos(raRad)
-        const y = distance * Math.sin(decRad)
-        const z = distance * Math.cos(decRad) * Math.sin(raRad)
+        const x = distance * Math.cos(decRad) * Math.cos(raRad) / this.Scale
+        const y = distance * Math.sin(decRad) / this.Scale
+        const z = distance * Math.cos(decRad) * Math.sin(raRad) /this.Scale
 
+
+        if ([x, y, z].some(v => isNaN(v))) return null; // фильтруем NaN
 
        //возвращает новый объект с этими свойствами
         return {
@@ -50,8 +53,29 @@ class convertToXYZ {
         
     }
 
-    convertAll(){
-        return this.stars.map(star => this.convertStar(star)).filter(Boolean)
+    convertAll() {
+        // высчитываем дистанции прямо из Plx
+        const distances = this.stars.map(star => 1000 / Number(star.Plx));
+        const maxDist = Math.max(...distances);
+        this.Scale = maxDist / 100;
+    
+        this.convertedStars = this.stars.map(star => this.convertStar(star)).filter(Boolean);
+        return this.convertedStars;
+    }
+    
+
+
+    getPositions(){
+        if (!this.convertedStars) this.convertAll()     //считает converAll
+
+            const positions = new Float32Array(this.convertedStars.length * 3)
+            for (let i = 0; i < this.convertedStars.length; i++){
+                const star = this.convertedStars[i]
+                positions[i * 3] = star.x
+                positions[i * 3 + 1] = star.y
+                positions[i * 3 + 2] = star.z
+            }
+            return positions
     }
 
 }
