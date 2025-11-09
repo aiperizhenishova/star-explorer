@@ -43,12 +43,12 @@ class convertToXYZ {
 
        //возвращает новый объект с этими свойствами
         return {
-            HIP: star.HIP,
+            HIP: star.HIP,   //название
             x: x,
             y: y,
             z: z,
-            Vmag: star.Vmag,
-            SpType: star.SpType
+            Vmag: star.Vmag,    //яркость 
+            SpType: star.SpType  //цвет
         }
         
     }
