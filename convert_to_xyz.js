@@ -39,7 +39,7 @@ class convertToXYZ {
         const z = distance * Math.cos(decRad) * Math.sin(raRad) /this.Scale
 
 
-        if ([x, y, z].some(v => isNaN(v))) return null; // фильтруем NaN
+        if ([x, y, z].some(v => isNaN(v))) return null; 
 
        //возвращает новый объект с этими свойствами
         return {
@@ -48,10 +48,19 @@ class convertToXYZ {
             y: y,
             z: z,
             Vmag: star.Vmag,    //яркость 
-            SpType: star.SpType  //цвет
+            SpType: star.SpType,  //цвет
+            BTmag: star.BTmag,    // Яркость в синем фильтре B
+            VTmag: star.VTmag,    // Яркость в видимом фильтре V
+            VI: star['V-I'],      // Цветовой индекс (V-I), показывает оттенок звезды (больший индекс = более красная)
+            pmRA: star.pmRA,      // Собственное движение звезды по RA (миллисекунды дуги в год)
+            pmDE: star.pmDE,      // Собственное движение звезды по Dec
+            Size: 5 / (star.Vmag + 0.1) // размер звезды для визуализации
+
         }
         
     }
+
+    
 
     convertAll() {
         // высчитываем дистанции прямо из Plx
@@ -66,7 +75,8 @@ class convertToXYZ {
 
 
     getPositions(){
-        if (!this.convertedStars) this.convertAll()     //считает converAll
+        if (!this.convertedStars) 
+            this.convertAll()     //считает converAll
 
             const positions = new Float32Array(this.convertedStars.length * 3)
             for (let i = 0; i < this.convertedStars.length; i++){

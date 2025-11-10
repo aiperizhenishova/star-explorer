@@ -14,12 +14,12 @@ const scene = new THREE.Scene()
 
 //камера
 const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth/window.innerHeight,
-  0.1,
-  2000
+  75,         // угол обзора (field of view) в градусах
+  window.innerWidth/window.innerHeight,     // соотношение сторон (aspect)
+  0.1,        // ближняя плоскость отсечения (near)
+  2000        // дальняя плоскость отсечения (far)
 )
-camera.position.z = 500
+camera.position.z = 800      // позиция камеры по оси Z
 
 
 //рендер
@@ -43,7 +43,6 @@ window.addEventListener('resize', () => {
 // const material = new THREE.MeshBasicMaterial({color: 0xffff00})
 // const star = new THREE.Mesh(geometry, material)
 // scene.add(star)
-
 
 
 //1000 звезд
@@ -76,32 +75,63 @@ controls.minDistance = 2
 controls.maxDistance = 400
 
 
-let starsMesh; // объявляем глобально
+
 
 // Функция для преобразования SpType в цвет (в HEX-формате)
 function getColorBySpType(spType) {
   if (!spType) return 0xFFFFFF; // Белый, если нет данных
   
-  // Берем первую букву спектрального класса
-  const type = spType.charAt(0).toUpperCase();
+  // Берем первую букву спектрального класса например F из F5
+  const mainType = spType.charAt(0).toUpperCase();        //F
+  const subclass = parseInt(spType.slice(1)) || 0;    //5 
 
   // Цвета по классам (O, B, A, F, G, K, M)
   // Эти цвета более реалистично имитируют температуру звезды
   const colorMap = {
-      'O': 0x9BB4FF, // Синий/Голубой
-      'B': 0xAABFFF, // Голубовато-белый
-      'A': 0xF8F8FF, // Чистый белый
-      'F': 0xFCF8F5, // Желтовато-белый
-      'G': 0xFFE08D, // Желтый (как Солнце)
-      'K': 0xFFC97C, // Оранжевый
-      'M': 0xFF7A68  // Красно-оранжевый
+      'O': [0x9BB4FF, 0xA0C0FF],   // голубой, от ярко-синего до голубого
+      'B': [0xAABFFF, 0xB0D0FF],   // голубовато-белый, светлый голубой
+      'A': [0xF8F8FF, 0xFAFAFF],   // белый, почти чисто белый
+      'F': [0xFCF8F5, 0xFFF0E0],   // желтовато-белый, теплый белый
+      'G': [0xFFE08D, 0xFFD700],   // желтый, от мягкого до насыщенного желтого (Солнце ~G2)
+      'K': [0xFFC97C, 0xFFB000],   // оранжевый, от светлого до насыщенного оранжевого
+      'M': [0xFF7A68, 0xFF5500]    // красно-оранжевый, от яркого до насыщенного красного
+
   };
 
-  return colorMap[type] || 0xFFFFFF; // Возвращаем цвет или белый по умолчанию
+  const colors = colorMap[mainType] || [0xFFFFFF, 0xFFFFFF]
+  const t = subclass / 9
+  const color = Math.round(colors[0] * (1 - t) + colors[1] * t)
+
+  return color; 
 }
 
 
 
+//вычисление  точного цвета BT-mag, VT-mag и VI
+function getColorFromVI(VI) {
+  if (VI == null) return 0xFFFFFF;  //белый по умолчанию
+  // Чем больше VI → более красный
+  // Чем меньше VI → более синий
+  const t = Math.min(Math.max((VI - 0.0) / 2.0, 0), 1)   //нормализуем
+  const r = 1.0 * t + 0.8 * (1 - t);  // красная компонента
+  const g = 0.8 * (1 - t);            // зеленая компонента
+  const b = 1.0 * (1 - t);            // синяя компонента
+  return new THREE.Color(r, g, b);
+}
+
+
+//собственное движение звезды
+function updateStarPositions(stars, deltaYears) {
+  stars.forEach(star => {
+      const factor = 0.01; // масштаб движения для сцены
+      star.x += star.pmRA * factor * deltaYears;
+      star.y += star.pmDE * factor * deltaYears;
+  });
+}
+
+
+let starsMesh;       // для Points
+let convertedStars;  // сюда сохраняем конвертированные звезды
 
 fetch('hipparcos-voidmain.csv')
   .then(res => res.text())
@@ -116,13 +146,16 @@ fetch('hipparcos-voidmain.csv')
         && row.Vmag != null && row.Vmag <= 8.0; 
       });
 
+
+
     // Конвертация в XYZ
     const converter = new convertToXYZ(starsData);
     converter.convertAll();
+    convertedStars = converter.convertedStars;  // сохраняем глобально
     const positions = converter.getPositions();
 
     //СЖАТИЕ КООРДИНАТ
-    const scaleFactor = 700; 
+    const scaleFactor = 200; 
 
     for (let i = 0; i < positions.length; i++) {
       positions[i] *= scaleFactor; 
@@ -151,17 +184,17 @@ fetch('hipparcos-voidmain.csv')
       const star = converter.convertedStars[i]
       
 
-      const hexColor = getColorBySpType(star.SpType);
-      const c = new THREE.Color(hexColor);
+      const colorSp = new THREE.Color(getColorBySpType(star.SpType));
+      const colorVI = getColorFromVI(star.VI);
+      const c = colorSp.lerp(colorVI, 0.5); // смесь 50/50
 
       colors[i*3]     = c.r;
       colors[i*3 + 1] = c.g;
       colors[i*3 + 2] = c.b;
 
 
-      // РАЗМЕР: берем из CSV (например Vmag), преобразуем в удобный диапазон
-      // чем меньше Vmag (ярче звезда), тем больше точка
-      sizes[i] = star.Size; // если в CSV уже есть готовый размер
+  
+      sizes[i] = (5 / (star.Vmag + 0.1)) * 8; // визуально крупнее и Size: 5 / (star.Vmag + 0.1) // создали размер звезды
       
     }
     geometry.setAttribute('acolor', new THREE.BufferAttribute(colors, 3))
@@ -180,7 +213,7 @@ fetch('hipparcos-voidmain.csv')
       void main() {
         vColor = acolor;
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = aSize * (300.0 / max(1.0, -mvPosition.z));
+        gl_PointSize = aSize * (200.0 / max(1.0, -mvPosition.z));
         gl_Position = projectionMatrix * mvPosition;
       }
     `;
@@ -219,14 +252,24 @@ const material = new THREE.ShaderMaterial({
 
 
 
-
-
 //функция для постоянного рендера и анимации
 function animate(){
   requestAnimationFrame(animate)
 
-  if (starsMesh) starsMesh.rotation.y += 0.0003
+  if (starsMesh && convertedStars) {
+    starsMesh.rotation.y += 0.0003
 
+    // пример движения на 1 год:
+    updateStarPositions(convertedStars, 1);
+
+    // обновляем позиции буфера
+    const posAttr = starsMesh.geometry.getAttribute('position');
+    for (let i = 0; i < convertedStars.length; i++){
+      posAttr.setXYZ(i, convertedStars[i].x, convertedStars[i].y, convertedStars[i].z);
+    }
+    posAttr.needsUpdate = true;
+  }  
   renderer.render(scene, camera)
+  
 }
 animate()
