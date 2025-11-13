@@ -39,3 +39,4 @@ console.log('first five rows in CSV:')
 console.log(stars.slice(0,5))
 
 //console.log(result.data.slice(0,5)) //выводит сырые данные
+

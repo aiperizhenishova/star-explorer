@@ -19,7 +19,7 @@ const camera = new THREE.PerspectiveCamera(
   0.1,        // ближняя плоскость отсечения (near)
   2000        // дальняя плоскость отсечения (far)
 )
-camera.position.z = 800      // позиция камеры по оси Z
+camera.position.z = 1000      // позиция камеры по оси Z
 
 
 //рендер
@@ -72,7 +72,9 @@ controls.enableDamping = true
 controls.dampingFactor = 0.05
 controls.screenSpacePanning = false
 controls.minDistance = 2
-controls.maxDistance = 400
+controls.maxDistance = 1000
+controls.target.set(0, 0, 100)
+controls.update()
 
 
 
@@ -121,13 +123,13 @@ function getColorFromVI(VI) {
 
 
 //собственное движение звезды
-function updateStarPositions(stars, deltaYears) {
-  stars.forEach(star => {
-      const factor = 0.01; // масштаб движения для сцены
-      star.x += star.pmRA * factor * deltaYears;
-      star.y += star.pmDE * factor * deltaYears;
-  });
-}
+// function updateStarPositions(stars, deltaYears) {
+//   stars.forEach(star => {
+//       const factor = 0.01; // масштаб движения для сцены
+//       star.x += star.pmRA * factor * deltaYears;
+//       star.y += star.pmDE * factor * deltaYears;
+//   });
+// }
 
 
 let starsMesh;       // для Points
@@ -142,8 +144,8 @@ fetch('hipparcos-voidmain.csv')
     const starsData = result.data.filter(row => {
       return row.RAdeg != null && row.DEdeg != null && row.Plx > 0
         && !isNaN(row.RAdeg) && !isNaN(row.DEdeg) && !isNaN(row.Plx)
-        // ⚡️ НОВОЕ: Проверяем, что Vmag существует и ограничиваем яркость
-        && row.Vmag != null && row.Vmag <= 8.0; 
+        // Исключаем очень яркие звёзды (Vmag < 3.0), которые слишком сильно пересвечивают центр
+        && row.Vmag != null && row.Vmag >= 3.0 && row.Vmag <= 8.0; 
       });
 
 
@@ -155,7 +157,7 @@ fetch('hipparcos-voidmain.csv')
     const positions = converter.getPositions();
 
     //СЖАТИЕ КООРДИНАТ
-    const scaleFactor = 200; 
+    const scaleFactor = 3000; 
 
     for (let i = 0; i < positions.length; i++) {
       positions[i] *= scaleFactor; 
@@ -194,7 +196,7 @@ fetch('hipparcos-voidmain.csv')
 
 
   
-      sizes[i] = (5 / (star.Vmag + 0.1)) * 8; // визуально крупнее и Size: 5 / (star.Vmag + 0.1) // создали размер звезды
+      sizes[i] = (5 / (star.Vmag + 0.1)) * 5; // визуально крупнее и Size: 5 / (star.Vmag + 0.1) // создали размер звезды
       
     }
     geometry.setAttribute('acolor', new THREE.BufferAttribute(colors, 3))
@@ -227,22 +229,21 @@ fetch('hipparcos-voidmain.csv')
         vec2 cxy = 2.0 * gl_PointCoord - 1.0;
         float r = dot(cxy, cxy);
         if (r > 1.0) discard;
-        gl_FragColor = vec4(vColor * (1.0 - r * 0.5), 1.0);
+
+        float strength = 1.0 - r * r; // Используем квадрат для более мягкого градиента к краю
+        float multiplier = 0.5;
+        gl_FragColor = vec4(vColor * strength * multiplier, strength); // strength как альфа-канал для более мягкого края
       }
     `;
 
 
-
-const material = new THREE.ShaderMaterial({
-    // uniforms: {
-    //   size: { value: 3 } 
-    // },
-    vertexShader: starVertexShader,
-    fragmentShader: starFragmentShader,
-    transparent: true,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    vertexColors: true
+  const material = new THREE.ShaderMaterial({
+      vertexShader: starVertexShader,   // <-- ДОБАВИТЬ ЭТИ СТРОКИ
+      fragmentShader: starFragmentShader, // <-- ДОБАВИТЬ ЭТИ СТРОКИ
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false, 
+      vertexColors: true
   });
 
 
@@ -257,18 +258,19 @@ function animate(){
   requestAnimationFrame(animate)
 
   if (starsMesh && convertedStars) {
-    starsMesh.rotation.y += 0.0003
+    //starsMesh.rotation.y += 0.0003
 
     // пример движения на 1 год:
-    updateStarPositions(convertedStars, 1);
+    //updateStarPositions(convertedStars, 1);
 
     // обновляем позиции буфера
-    const posAttr = starsMesh.geometry.getAttribute('position');
-    for (let i = 0; i < convertedStars.length; i++){
-      posAttr.setXYZ(i, convertedStars[i].x, convertedStars[i].y, convertedStars[i].z);
-    }
-    posAttr.needsUpdate = true;
+    // const posAttr = starsMesh.geometry.getAttribute('position');
+    // for (let i = 0; i < convertedStars.length; i++){
+    //   posAttr.setXYZ(i, convertedStars[i].x, convertedStars[i].y, convertedStars[i].z);
+    // }
+    // posAttr.needsUpdate = true;
   }  
+  controls.update()
   renderer.render(scene, camera)
   
 }
