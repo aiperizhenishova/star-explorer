@@ -5,9 +5,51 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>star-explorer</title>
+
   </head>
+
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
+
+    <style>
+      #star-info-box {
+        position: absolute;
+        background: rgba(30, 30, 50, 0.9);
+        border: 1px solid white;
+        padding: 6px 40px;
+        color: white;
+        font-family: sans-serif;
+        max-width: 500px;
+        z-index: 1000;
+        display: none; 
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(102, 102, 255, 0.5);
+      }
+      #star-info-box * {
+        pointer-events: auto; /* всё внутри окна ловит клики */
+      }
+      
+      #star-info-box button {
+        position: absolute;
+        top: 5px;
+        right: 10px;
+        float: right;
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.2em;
+        cursor: pointer;
+        pointer-events: auto; /* но кнопка ловит клики */
+      }
+    </style>
+    
+    <div id="star-info-box">
+      <button id="close-info">x</button>
+      <h3 id="star-name">Название звезды</h3>
+      <p>Vmag: <span id="star-vmag"></span></p>
+      <p>SpType: <span id="star-sptype"></span></p>
+      <p>Distance: <span id="star-distance"></span> pc</p>
+      </div>
   </body>
 </html>

@@ -22,11 +22,112 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.z = 1000      // позиция камеры по оси Z
 
 
-//рендер
+
+
+// === Рендер ===
 const renderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setClearColor(0x000000, 1)
 document.body.appendChild(renderer.domElement)
+
+
+
+
+//функция для показа инфо звезды
+function showStarInfo(starsData, screenX, screenY){
+  const infoBox = document.getElementById('star-info-box')
+  
+  function hideStarInfo() {
+    document.getElementById('star-info-box').style.display = 'none';
+  }
+  
+
+  if(!infoBox){
+    console.error("Элемент #star-info-box не найден")
+    return
+  }
+
+  document.getElementById('star-name').textContent = starsData.HIP || starsData.ID || 'Unammed star'
+  document.getElementById('star-vmag').textContent = starsData.Vmag ? starsData.Vmag.toFixed(2) : 'N/A'
+  document.getElementById('star-sptype').textContent = starsData.SpType || 'N/A'
+
+  const plx = starsData.Plx   // просто берёт Plx
+  const distance = plx > 0 ? (1000 / plx).toFixed(2) : 'N/A'
+  document.getElementById('star-distance').textContent = distance
+
+
+  infoBox.style.left = `${screenX}px`
+  infoBox.style.top = `${screenY}px`
+  infoBox.style.transform = 'translate(0, 0)'
+
+  infoBox.style.display = 'block'
+
+}
+
+
+
+//RAYCASTER (mouse clicking, touchscreen)
+const mouse = new THREE.Vector2()
+const raycaster = new THREE.Raycaster() 
+
+//То есть если курсор или палец находится в пределах 5 пикселей от точки, 
+// Raycaster считает, что ты её выбрал.
+//Без этого Raycaster для точек с маленьким размером почти никогда не срабатывает.
+raycaster.params.Points.threshold = 15 
+
+function onClick (event){
+
+  let x, y 
+
+  if (event.touches && event.touches.length > 0){
+
+    //touchpad
+    x = event.touches[0].clientX
+    y = event.touches[0].clientY
+   
+  }else{
+
+     //mouse
+    x = event.clientX
+    y = event.clientY
+  }
+
+  //нормализовать координаты
+  mouse.x = (x/window.innerWidth) * 2 - 1
+  mouse.y = -(y/window.innerHeight) * 2 + 1
+
+
+
+  raycaster.setFromCamera(mouse, camera)
+
+  if (raycasterPoints){
+    const intersects = raycaster.intersectObject(raycasterPoints)
+
+    //если есть пересечение берет номер этой звезды
+    if(intersects.length > 0){
+
+      const index = intersects[0].index   //номер звезды
+      const starsData = convertedStars[index]   //достаём данные конкретной звезды 
+      
+      console.log("клик по звезде", convertedStars[index])
+
+      //вызов функции для отображения окна
+      showStarInfo(starsData, event.clientX + 10, event.clientY - 10)
+    
+    }else{
+      // клик не по звезде
+      infoBox.style.display = "none";
+    }
+  }
+  
+
+}
+
+window.addEventListener('click', onClick)
+window.addEventListener('touchstart', onClick)
+
+
+
 
 
 
@@ -66,7 +167,7 @@ window.addEventListener('resize', () => {
 
 
 
-//управление камерой
+// === Управление камерой ===
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
 controls.dampingFactor = 0.05
@@ -78,8 +179,7 @@ controls.update()
 
 
 
-
-// Функция для преобразования SpType в цвет (в HEX-формате)
+// === Цвета звёзд (в HEX-формате) === 
 function getColorBySpType(spType) {
   if (!spType) return 0xFFFFFF; // Белый, если нет данных
   
@@ -108,7 +208,6 @@ function getColorBySpType(spType) {
 }
 
 
-
 //вычисление  точного цвета BT-mag, VT-mag и VI
 function getColorFromVI(VI) {
   if (VI == null) return 0xFFFFFF;  //белый по умолчанию
@@ -132,8 +231,16 @@ function getColorFromVI(VI) {
 // }
 
 
+
+
+
+
+
+// === Загрузка и создание звезд ===
+
 let starsMesh;       // для Points
 let convertedStars;  // сюда сохраняем конвертированные звезды
+let raycasterPoints;
 
 fetch('hipparcos-voidmain.csv')
   .then(res => res.text())
@@ -154,26 +261,15 @@ fetch('hipparcos-voidmain.csv')
     const converter = new convertToXYZ(starsData);
     converter.convertAll();
     convertedStars = converter.convertedStars;  // сохраняем глобально
+    
     const positions = converter.getPositions();
-
-    //СЖАТИЕ КООРДИНАТ
-    const scaleFactor = 3000; 
-
+    const scaleFactor = 3000; //СЖАТИЕ КООРДИНАТ
     for (let i = 0; i < positions.length; i++) {
       positions[i] *= scaleFactor; 
     }
 
-    // Проверка: выводим первые 10 координат, чтобы убедиться, что нет NaN
-    console.log('positions sample:', positions.slice(0, 10));
 
-
-    if (positions.some(v => isNaN(v))) {
-      console.error('positions содержит NaN!', positions);
-      return;
-    }
     
-
-
     // Создаём Three.js объекты
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -184,8 +280,6 @@ fetch('hipparcos-voidmain.csv')
 
     for (let i = 0; i < converter.convertedStars.length; i++) {
       const star = converter.convertedStars[i]
-      
-
       const colorSp = new THREE.Color(getColorBySpType(star.SpType));
       const colorVI = getColorFromVI(star.VI);
       const c = colorSp.lerp(colorVI, 0.5); // смесь 50/50
@@ -195,7 +289,7 @@ fetch('hipparcos-voidmain.csv')
       colors[i*3 + 2] = c.b;
 
 
-  
+
       sizes[i] = (5 / (star.Vmag + 0.1)) * 5; // визуально крупнее и Size: 5 / (star.Vmag + 0.1) // создали размер звезды
       
     }
@@ -246,30 +340,51 @@ fetch('hipparcos-voidmain.csv')
       vertexColors: true
   });
 
+  starsMesh = new THREE.Points(geometry, material);
+  scene.add(starsMesh);
 
-    starsMesh = new THREE.Points(geometry, material);
-    scene.add(starsMesh);
+
+
+  const rayGeometry = new THREE.BufferGeometry();
+  rayGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  
+  const rayMat = new THREE.PointsMaterial({
+    size: 5,           // важно > 0
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.0,
+  });
+  raycasterPoints = new THREE.Points(rayGeometry, rayMat);
+  scene.add(raycasterPoints);
   });
 
 
 
-//функция для постоянного рендера и анимации
+  function worldToScreen (position, camera, renderer){
+    const vector = position.clone().project(camera)
+
+    const x = (vector.x * 0.5 + 0.5) * renderer.domElement.clientWidth;
+    const y = ( -vector.y * 0.5 + 0.5) * renderer.domElement.clientHeight;
+
+    return{x, y}
+  }
+
+
+
+
+
+  const infoBox = document.getElementById('star-info-box')
+  const closeBtn = document.getElementById('close-info')
+
+  closeBtn.addEventListener('click', (event) => {
+    event.stopPropagation()          // клик не идёт к сцене → Raycaster не срабатывает
+    infoBox.style.display = 'none'   //скрывает окно полностью
+  })
+
+  
+// === Анимация ===
 function animate(){
   requestAnimationFrame(animate)
-
-  if (starsMesh && convertedStars) {
-    //starsMesh.rotation.y += 0.0003
-
-    // пример движения на 1 год:
-    //updateStarPositions(convertedStars, 1);
-
-    // обновляем позиции буфера
-    // const posAttr = starsMesh.geometry.getAttribute('position');
-    // for (let i = 0; i < convertedStars.length; i++){
-    //   posAttr.setXYZ(i, convertedStars[i].x, convertedStars[i].y, convertedStars[i].z);
-    // }
-    // posAttr.needsUpdate = true;
-  }  
   controls.update()
   renderer.render(scene, camera)
   
