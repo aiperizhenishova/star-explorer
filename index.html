@@ -25,6 +25,7 @@
         display: none; 
         border-radius: 10px;
         box-shadow: 0 0 10px rgba(102, 102, 255, 0.5);
+        width: 100px;
       }
       #star-info-box * {
         pointer-events: auto; /* всё внутри окна ловит клики */
@@ -46,10 +47,11 @@
     
     <div id="star-info-box">
       <button id="close-info">x</button>
-      <h3 id="star-name">Название звезды</h3>
+      <p>HIP: <span id="star-name"></span></p>
       <p>Vmag: <span id="star-vmag"></span></p>
       <p>SpType: <span id="star-sptype"></span></p>
       <p>Distance: <span id="star-distance"></span> pc</p>
+      <p>Size: <span id="star-size"></span></p>
       </div>
   </body>
 </html>

@@ -1,5 +1,6 @@
 import fs from 'fs'
 import Papa from 'papaparse'
+import { distance } from 'three/tsl';
 
 // читаем CSV с диска
 const file = fs.readFileSync('hipparcos-voidmain.csv', 'utf8')
@@ -23,7 +24,8 @@ const stars = result.data.map(star => ({
   VI: star['V-I'],      // Цветовой индекс (V-I), показывает оттенок звезды (больший индекс = более красная)
   pmRA: star.pmRA,      // Собственное движение звезды по RA (миллисекунды дуги в год)
   pmDE: star.pmDE,      // Собственное движение звезды по Dec
-  Size: 5 / (star.Vmag + 0.1) // размер звезды для визуализации
+  Size: 5 / (star.Vmag + 0.1), // размер звезды для визуализации
+  distance: distance
 }));
 
 // 1. Найти максимальный размер

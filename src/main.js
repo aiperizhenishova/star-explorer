@@ -36,6 +36,19 @@ document.body.appendChild(renderer.domElement)
 //функция для показа инфо звезды
 function showStarInfo(starsData, screenX, screenY){
   const infoBox = document.getElementById('star-info-box')
+  const closeBtn = document.getElementById('close-info')
+
+  // Обработчик для кнопки закрытия
+  closeBtn.addEventListener('click', (event) =>{
+    event.stopPropagation();
+    infoBox.style.display = 'none';
+  })
+
+  // Обработчик для самого окна, чтобы клики по тексту не проходили к сцене
+  infoBox.addEventListener('click', (event) => {
+    event.stopPropagation();
+  })
+
   
   function hideStarInfo() {
     document.getElementById('star-info-box').style.display = 'none';
@@ -50,10 +63,12 @@ function showStarInfo(starsData, screenX, screenY){
   document.getElementById('star-name').textContent = starsData.HIP || starsData.ID || 'Unammed star'
   document.getElementById('star-vmag').textContent = starsData.Vmag ? starsData.Vmag.toFixed(2) : 'N/A'
   document.getElementById('star-sptype').textContent = starsData.SpType || 'N/A'
+  document.getElementById('star-distance').textContent = starsData.distance?.toFixed(1) || "N/A";
+  document.getElementById('star-size').textContent = starsData.Size.toFixed(2);
 
-  const plx = starsData.Plx   // просто берёт Plx
-  const distance = plx > 0 ? (1000 / plx).toFixed(2) : 'N/A'
-  document.getElementById('star-distance').textContent = distance
+  // const plx = starsData.Plx   // просто берёт Plx
+  // const distance = plx > 0 ? (1000 / plx).toFixed(2) : 'N/A'
+  // document.getElementById('star-distance').textContent = distance
 
 
   infoBox.style.left = `${screenX}px`
@@ -372,7 +387,6 @@ fetch('hipparcos-voidmain.csv')
 
 
 
-
   const infoBox = document.getElementById('star-info-box')
   const closeBtn = document.getElementById('close-info')
 
@@ -380,6 +394,8 @@ fetch('hipparcos-voidmain.csv')
     event.stopPropagation()          // клик не идёт к сцене → Raycaster не срабатывает
     infoBox.style.display = 'none'   //скрывает окно полностью
   })
+
+  
 
   
 // === Анимация ===

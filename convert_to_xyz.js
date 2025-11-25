@@ -29,8 +29,14 @@ class convertToXYZ {
         const decRad = this.degToRad(Number(star.DEdeg))
 
 
+
+
+        const plxNum = Number(star.Plx);
+        if(!plxNum || plxNum <= 0) return null;
+
+
         //считает расстояние
-        const distance = 1000 / Number(star.Plx)
+        const distance = star.Plx && Number(star.Plx) != 0 ? 1000 / Number(star.Plx) : NaN
 
 
         //преобраз в x y z
@@ -38,6 +44,8 @@ class convertToXYZ {
         const y = distance * Math.sin(decRad) / this.Scale
         const z = distance * Math.cos(decRad) * Math.sin(raRad) /this.Scale
 
+
+        
 
         if ([x, y, z].some(v => isNaN(v))) return null; 
 
@@ -54,8 +62,8 @@ class convertToXYZ {
             VI: star['V-I'],      // Цветовой индекс (V-I), показывает оттенок звезды (больший индекс = более красная)
             pmRA: star.pmRA,      // Собственное движение звезды по RA (миллисекунды дуги в год)
             pmDE: star.pmDE,      // Собственное движение звезды по Dec
-            Size: 5 / (star.Vmag + 0.1) // размер звезды для визуализации
-
+            Size: 5 / (star.Vmag + 0.1), // размер звезды для визуализации
+            distance: distance
         }
         
     }
