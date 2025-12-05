@@ -90,7 +90,7 @@ const raycaster = new THREE.Raycaster()
 //Без этого Raycaster для точек с маленьким размером почти никогда не срабатывает.
 raycaster.params.Points.threshold = 15 
 
-function onClick (event){
+function handleClick (event){
 
   let x, y 
 
@@ -138,8 +138,29 @@ function onClick (event){
 
 }
 
-window.addEventListener('click', onClick)
-window.addEventListener('touchstart', onClick)
+let pointerDown = false;
+let startX = 0;
+let startY = 0;
+const TAP_THRESHOLD = 10; // пиксели — можно менять
+
+window.addEventListener("pointerdown", (e) => {
+    pointerDown = true;
+    startX = e.clientX;
+    startY = e.clientY;
+});
+
+window.addEventListener("pointerup", (e) => {
+    if (!pointerDown) return;
+    pointerDown = false;
+
+    const dx = Math.abs(e.clientX - startX);
+    const dy = Math.abs(e.clientY - startY);
+
+    // если пользователь двигал палец/мышь → это вращение, не клик
+    if (dx > TAP_THRESHOLD || dy > TAP_THRESHOLD) return;
+
+    handleClick(e); // <-- вместо onClick
+});
 
 
 
@@ -257,7 +278,7 @@ let starsMesh;       // для Points
 let convertedStars;  // сюда сохраняем конвертированные звезды
 let raycasterPoints;
 
-fetch('hipparcos-voidmain.csv')
+fetch('/star-explorer/hipparcos-voidmain.csv')
   .then(res => res.text())
   .then(csvText => {
     const result = Papa.parse(csvText, { header: true, dynamicTyping: true });
