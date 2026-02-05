@@ -9,10 +9,12 @@ document.body.style.margin = '0';
 document.body.style.padding = '0';
 document.documentElement.style.overflow = 'hidden';
 
-//сцена
+// === СЦЕНА ===
 const scene = new THREE.Scene()
 
-//камера
+
+
+// === КАМЕРА ===
 const camera = new THREE.PerspectiveCamera(
   75,         // угол обзора (field of view) в градусах
   window.innerWidth/window.innerHeight,     // соотношение сторон (aspect)
@@ -23,8 +25,7 @@ camera.position.z = 1000      // позиция камеры по оси Z
 
 
 
-
-// === Рендер ===
+// === РЕНДЕР ===
 const renderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setClearColor(0x000000, 1)
@@ -33,7 +34,7 @@ document.body.appendChild(renderer.domElement)
 
 
 
-//функция для показа инфо звезды
+// === ФУНКЦИЯ ПОКАЗА INFOBOX ===
 function showStarInfo(starsData, screenX, screenY){
   const infoBox = document.getElementById('star-info-box')
   const closeBtn = document.getElementById('close-info')
@@ -49,14 +50,14 @@ function showStarInfo(starsData, screenX, screenY){
     event.stopPropagation();
   })
 
-  
+
   function hideStarInfo() {
     document.getElementById('star-info-box').style.display = 'none';
   }
   
 
   if(!infoBox){
-    console.error("Элемент #star-info-box не найден")
+    console.error("Element #star-info-box not found")
     return
   }
 
@@ -81,12 +82,12 @@ function showStarInfo(starsData, screenX, screenY){
 
 
 
-//RAYCASTER (mouse clicking, touchscreen)
+// === RAYCASTER (mouse clicking, touchscreen) ===
 const mouse = new THREE.Vector2()
 const raycaster = new THREE.Raycaster() 
 
 //То есть если курсор или палец находится в пределах 5 пикселей от точки, 
-// Raycaster считает, что ты её выбрал.
+// Raycaster считает, что её выбрали.
 //Без этого Raycaster для точек с маленьким размером почти никогда не срабатывает.
 raycaster.params.Points.threshold = 15 
 
@@ -122,9 +123,9 @@ function handleClick (event){
     if(intersects.length > 0){
 
       const index = intersects[0].index   //номер звезды
-      const starsData = convertedStars[index]   //достаём данные конкретной звезды 
+      const starsData = convertedStars[index]   //достаёт данные конкретной звезды 
       
-      console.log("клик по звезде", convertedStars[index])
+      console.log("star clicked", convertedStars[index])
 
       //вызов функции для отображения окна
       showStarInfo(starsData, event.clientX + 10, event.clientY - 10)
@@ -141,7 +142,7 @@ function handleClick (event){
 let pointerDown = false;
 let startX = 0;
 let startY = 0;
-const TAP_THRESHOLD = 10; // пиксели — можно менять
+const TAP_THRESHOLD = 10; 
 
 window.addEventListener("pointerdown", (e) => {
     pointerDown = true;
@@ -175,35 +176,9 @@ window.addEventListener('resize', () => {
 })
 
 
-//объект
-// const geometry = new THREE.SphereGeometry(1, 32, 32)
-// const material = new THREE.MeshBasicMaterial({color: 0xffff00})
-// const star = new THREE.Mesh(geometry, material)
-// scene.add(star)
 
 
-//1000 звезд
-// const starCount = 1000
-
-// .//массив координат всех звезд
-// const positions = new Float32Array(starCount * 3)
-
-// for (let i = 0; i < starCount * 3; i++) {
-//   positions[i] = (Math.random() - 0.5) * 1000
-// }
-
-
-// const material = new THREE.PointsMaterial({
-//   color: 0xffffff,
-//   size:1,
-// })
-
-// const stars = new THREE.Points(geometry, material)
-// scene.add(stars)
-
-
-
-// === Управление камерой ===
+// === УПРАВЛЕНИЕ КАМЕРОЙ ===
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
 controls.dampingFactor = 0.05
@@ -215,11 +190,11 @@ controls.update()
 
 
 
-// === Цвета звёзд (в HEX-формате) === 
+// === ЦВЕТА ЗВЕЗД (в HEX-формате) === 
 function getColorBySpType(spType) {
   if (!spType) return 0xFFFFFF; // Белый, если нет данных
   
-  // Берем первую букву спектрального класса например F из F5
+  // Берет первую букву спектрального класса например F из F5
   const mainType = spType.charAt(0).toUpperCase();        //F
   const subclass = parseInt(spType.slice(1)) || 0;    //5 
 
@@ -257,7 +232,7 @@ function getColorFromVI(VI) {
 }
 
 
-//собственное движение звезды
+// === СОБСТЕННОЕ ДВИЖЕНИЕ ЗВЕЗДЫ ===
 // function updateStarPositions(stars, deltaYears) {
 //   stars.forEach(star => {
 //       const factor = 0.01; // масштаб движения для сцены
@@ -271,11 +246,10 @@ function getColorFromVI(VI) {
 
 
 
-
-// === Загрузка и создание звезд ===
+// === ЗАГРУЗКА CSV HIPPARCOS ===
 
 let starsMesh;       // для Points
-let convertedStars;  // сюда сохраняем конвертированные звезды
+let convertedStars;  // сюда сохраняются конвертированные звезды
 let raycasterPoints;
 
 fetch('/star-explorer/hipparcos-voidmain.csv')
@@ -283,11 +257,11 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
   .then(csvText => {
     const result = Papa.parse(csvText, { header: true, dynamicTyping: true });
 
-    // Фильтруем строки, чтобы RAdeg, DEdeg и Plx были числами и Plx > 0
+    // ФильтруеТ строки, чтобы RAdeg, DEdeg и Plx были числами и Plx > 0
     const starsData = result.data.filter(row => {
       return row.RAdeg != null && row.DEdeg != null && row.Plx > 0
         && !isNaN(row.RAdeg) && !isNaN(row.DEdeg) && !isNaN(row.Plx)
-        // Исключаем очень яркие звёзды (Vmag < 3.0), которые слишком сильно пересвечивают центр
+        // Исключает очень яркие звёзды (Vmag < 3.0), которые слишком сильно пересвечивают центр
         && row.Vmag != null && row.Vmag >= 3.0 && row.Vmag <= 8.0; 
       });
 
@@ -296,7 +270,7 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
     // Конвертация в XYZ
     const converter = new convertToXYZ(starsData);
     converter.convertAll();
-    convertedStars = converter.convertedStars;  // сохраняем глобально
+    convertedStars = converter.convertedStars;  // сохраняется глобально
     
     const positions = converter.getPositions();
     const scaleFactor = 3000; //СЖАТИЕ КООРДИНАТ
@@ -306,7 +280,7 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
 
 
     
-    // Создаём Three.js объекты
+    // === СОЗДАНИЕ THREE.JS ОБЪКТОВ ===
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
@@ -334,6 +308,7 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
 
 
 
+  // === SHADERS ===
     const starVertexShader = `
       precision highp float;
 
@@ -360,16 +335,23 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
         float r = dot(cxy, cxy);
         if (r > 1.0) discard;
 
-        float strength = 1.0 - r * r; // Используем квадрат для более мягкого градиента к краю
-        float multiplier = 0.5;
-        gl_FragColor = vec4(vColor * strength * multiplier, strength); // strength как альфа-канал для более мягкого края
+        // добавление лучей
+        float angle = atan(cxy.y, cxy.x);
+        float spikes = abs(sin(angle * 10.0)) * 0.3;
+
+        // базовое свечение
+        float strength = 1.0 - r * r;    // для более мягкого градиента к краю
+        strength += spikes;
+        float multiplier = 0.7;
+        
+        gl_FragColor = vec4(vColor * strength * multiplier, strength * multiplier); // strength как альфа-канал для более мягкого края
       }
     `;
 
 
   const material = new THREE.ShaderMaterial({
-      vertexShader: starVertexShader,   // <-- ДОБАВИТЬ ЭТИ СТРОКИ
-      fragmentShader: starFragmentShader, // <-- ДОБАВИТЬ ЭТИ СТРОКИ
+      vertexShader: starVertexShader,  
+      fragmentShader: starFragmentShader, 
       transparent: true,
       blending: THREE.AdditiveBlending,
       depthWrite: false, 
