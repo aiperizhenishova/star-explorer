@@ -91,18 +91,66 @@ const raycaster = new THREE.Raycaster()
 //Без этого Raycaster для точек с маленьким размером почти никогда не срабатывает.
 raycaster.params.Points.threshold = 15 
 
+
+
+// === создание линии между 2 звездами ===
+function createConnectionLine(star1, star2){
+  const points = [
+    new THREE.Vector3(
+      star1.starsData.x * 3000,
+      star1.starsData.y * 3000,
+      star1.starsData.z * 3000
+    ),
+    new THREE.Vector3(
+      star2.starsData.x * 3000,
+      star2.starsData.y * 3000,
+      star2.starsData.z * 3000
+    )
+  ];
+
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const material = new THREE.LineBasicMaterial({color: 0xffffff, linewidth: 5});
+  
+  if(connectionLine){
+    scene.remove(connectionLine);
+    connectionLine.geometry.dispose();
+    connectionLine.material.dispose();
+    connectionLine = null;
+  }
+
+  connectionLine = new THREE.Line(geometry, material);
+  scene.add(connectionLine);
+
+}
+
+// === подсвечивает выбранные звезды ===
+function highlightStar(index){
+  const sizes = starsMesh.geometry.attributes.aSize.array;
+  sizes[index] *= 1.5;
+  starsMesh.geometry.attributes.aSize.needsUpdate = true;
+}
+
+
+// расчет расстояния
+function calculateDistance(star1, star2){
+  const dx = star1.x - star2.x;
+  const dy = star1.y - star2.y;
+  const dz = star1.z - star2.z;
+  return Math.sqrt(dx*dx + dy*dy + dz*dz);
+}
+
+
+
+
 function handleClick (event){
 
   let x, y 
 
   if (event.touches && event.touches.length > 0){
-
     //touchpad
     x = event.touches[0].clientX
     y = event.touches[0].clientY
-   
   }else{
-
      //mouse
     x = event.clientX
     y = event.clientY
@@ -112,32 +160,46 @@ function handleClick (event){
   mouse.x = (x/window.innerWidth) * 2 - 1
   mouse.y = -(y/window.innerHeight) * 2 + 1
 
-
-
   raycaster.setFromCamera(mouse, camera)
 
-  if (raycasterPoints){
-    const intersects = raycaster.intersectObject(raycasterPoints)
+  if (!raycasterPoints) return;
 
-    //если есть пересечение берет номер этой звезды
-    if(intersects.length > 0){
+  const intersects = raycaster.intersectObject(raycasterPoints);
 
-      const index = intersects[0].index   //номер звезды
-      const starsData = convertedStars[index]   //достаёт данные конкретной звезды 
+  //если есть пересечение берет номер этой звезды
+  if (intersects.length > 0){
+
+    const index = intersects[0].index   //номер звезды
+    const starsData = convertedStars[index]   //достаёт данные конкретной звезды 
       
-      console.log("star clicked", convertedStars[index])
+      if(selectedStars >= 2){
+        selectedStars = [];   // очищает старый выбор
+        if(connectionLine){
+          scene.remove(connectionLine);
+          connectionLine.geometry.dispose();    // удаляет данные геометрии с GPU
+          connectionLine.material.dispose();
+          connectionLine = null;
+        }
+      }
 
-      //вызов функции для отображения окна
-      showStarInfo(starsData, event.clientX + 10, event.clientY - 10)
-    
+      selectedStars.push({starsData, index});
+
+      highlightStar(index);
+
+      if(selectedStars.length === 2){
+        createConnectionLine(selectedStars[0], selectedStars[1]);
+        const distance = calculateDistance(selectedStars[0].starsData, selectedStars[1].starsData);
+        console.log("Distance between stars: ", distance.toFixed(2), "parces");
+
+        showStarInfo(selectedStars[1].starsData, x + 10, y - 10);
+      }
     }else{
-      // клик не по звезде
-      infoBox.style.display = "none";
+      const infoBox = document.getElementById('star-info-box');
+      if(infoBox) infoBox.style.display = "none";
     }
-  }
+}
   
 
-}
 
 let pointerDown = false;
 let startX = 0;
@@ -251,6 +313,9 @@ function getColorFromVI(VI) {
 let starsMesh;       // для Points
 let convertedStars;  // сюда сохраняются конвертированные звезды
 let raycasterPoints;
+let connectionLine = null;   // линия между ними
+let selectedStars = [];      // массив выбранных звезд
+
 
 fetch('/star-explorer/hipparcos-voidmain.csv')
   .then(res => res.text())
