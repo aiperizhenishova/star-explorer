@@ -3,6 +3,7 @@ import { OrbitControls, ThreeMFLoader } from 'three/examples/jsm/Addons.js'
 import { convertToXYZ } from '../convert_to_xyz'   //импортирую звезды
 import Papa from 'papaparse'
 import { color, convert, max } from 'three/tsl'
+import StarDistanceUtils from './StarDistanceUtils.js'
 
 
 document.body.style.margin = '0';
@@ -11,7 +12,6 @@ document.documentElement.style.overflow = 'hidden';
 
 // === СЦЕНА ===
 const scene = new THREE.Scene()
-
 
 
 // === КАМЕРА ===
@@ -24,14 +24,11 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.z = 1000      // позиция камеры по оси Z
 
 
-
 // === РЕНДЕР ===
 const renderer = new THREE.WebGLRenderer()
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setClearColor(0x000000, 1)
 document.body.appendChild(renderer.domElement)
-
-
 
 
 // === ФУНКЦИЯ ПОКАЗА INFOBOX ===
@@ -46,9 +43,9 @@ function showStarInfo(starsData, screenX, screenY){
   })
 
   // Обработчик для самого окна, чтобы клики по тексту не проходили к сцене
-  infoBox.addEventListener('click', (event) => {
-    event.stopPropagation();
-  })
+  // infoBox.addEventListener('click', (event) => {
+  //   event.stopPropagation();
+  // })
 
 
   function hideStarInfo() {
@@ -81,7 +78,6 @@ function showStarInfo(starsData, screenX, screenY){
 }
 
 
-
 // === RAYCASTER (mouse clicking, touchscreen) ===
 const mouse = new THREE.Vector2()
 const raycaster = new THREE.Raycaster() 
@@ -89,56 +85,7 @@ const raycaster = new THREE.Raycaster()
 //То есть если курсор или палец находится в пределах 5 пикселей от точки, 
 // Raycaster считает, что её выбрали.
 //Без этого Raycaster для точек с маленьким размером почти никогда не срабатывает.
-raycaster.params.Points.threshold = 15 
-
-
-
-// === создание линии между 2 звездами ===
-function createConnectionLine(star1, star2){
-  const points = [
-    new THREE.Vector3(
-      star1.starsData.x * 3000,
-      star1.starsData.y * 3000,
-      star1.starsData.z * 3000
-    ),
-    new THREE.Vector3(
-      star2.starsData.x * 3000,
-      star2.starsData.y * 3000,
-      star2.starsData.z * 3000
-    )
-  ];
-
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  const material = new THREE.LineBasicMaterial({color: 0xffffff, linewidth: 5});
-  
-  if(connectionLine){
-    scene.remove(connectionLine);
-    connectionLine.geometry.dispose();
-    connectionLine.material.dispose();
-    connectionLine = null;
-  }
-
-  connectionLine = new THREE.Line(geometry, material);
-  scene.add(connectionLine);
-
-}
-
-// === подсвечивает выбранные звезды ===
-function highlightStar(index){
-  const sizes = starsMesh.geometry.attributes.aSize.array;
-  sizes[index] *= 1.5;
-  starsMesh.geometry.attributes.aSize.needsUpdate = true;
-}
-
-
-// расчет расстояния
-function calculateDistance(star1, star2){
-  const dx = star1.x - star2.x;
-  const dy = star1.y - star2.y;
-  const dz = star1.z - star2.z;
-  return Math.sqrt(dx*dx + dy*dy + dz*dz);
-}
-
+raycaster.params.Points.threshold = 5
 
 
 
@@ -172,23 +119,34 @@ function handleClick (event){
     const index = intersects[0].index   //номер звезды
     const starsData = convertedStars[index]   //достаёт данные конкретной звезды 
       
-      if(selectedStars >= 2){
-        selectedStars = [];   // очищает старый выбор
+      if(selectedStars.length >= 2){
+        
+        selectedStars.forEach(item =>{
+          const sizes = starsMesh.geometry.attributes.aSize.array;
+          sizes [item.index] /= 1.5;
+        });
+        starsMesh.geometry.attributes.aSize.needsUpdate = true;
+        
         if(connectionLine){
+          const infoBox = document.getElementById('star-info-box');
+          if (infoBox) infoBox.style.display = "none";
+
           scene.remove(connectionLine);
           connectionLine.geometry.dispose();    // удаляет данные геометрии с GPU
           connectionLine.material.dispose();
           connectionLine = null;
         }
+
+        selectedStars = [];   // очищает старый выбор
       }
 
       selectedStars.push({starsData, index});
 
-      highlightStar(index);
+      StarDistanceUtils.highlightStar(starsMesh, index);
 
       if(selectedStars.length === 2){
-        createConnectionLine(selectedStars[0], selectedStars[1]);
-        const distance = calculateDistance(selectedStars[0].starsData, selectedStars[1].starsData);
+        connectionLine = StarDistanceUtils.createConnectionLine(selectedStars[0], selectedStars[1], scene, connectionLine);
+        const distance = StarDistanceUtils.calculateDistance(selectedStars[0].starsData, selectedStars[1].starsData);
         console.log("Distance between stars: ", distance.toFixed(2), "parces");
 
         showStarInfo(selectedStars[1].starsData, x + 10, y - 10);
