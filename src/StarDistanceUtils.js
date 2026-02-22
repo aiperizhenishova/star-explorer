@@ -49,4 +49,18 @@ static calculateDistance(star1, star2){
     return Math.sqrt(dx*dx + dy*dy + dz*dz);
   }
 
+static showDistanceBox(distance, star1, star2){
+  const distanceInfoBox = document.getElementById('distance-box');
+  if(!distanceInfoBox) return;
+
+  const midX = (star1.x + star2.x) / 2;
+  const midY = (star1.y + star2.y) / 2;
+
+  distanceInfoBox.style.display = 'block';
+  distanceInfoBox.style.left = `${midX}px`;
+  distanceInfoBox.style.right = `${midY}px`;
+  distanceInfoBox.innerText = distance.toFixed(2) + 'pc';
+
+}
+
 }

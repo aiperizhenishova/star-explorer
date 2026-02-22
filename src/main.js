@@ -31,7 +31,7 @@ renderer.setClearColor(0x000000, 1)
 document.body.appendChild(renderer.domElement)
 
 
-// === ФУНКЦИЯ ПОКАЗА INFOBOX ===
+// === ФУНКЦИЯ ПОКАЗА INFOBOX(инфо-окно) ===
 function showStarInfo(starsData, screenX, screenY){
   const infoBox = document.getElementById('star-info-box')
   const closeBtn = document.getElementById('close-info')
@@ -47,11 +47,9 @@ function showStarInfo(starsData, screenX, screenY){
   //   event.stopPropagation();
   // })
 
-
   function hideStarInfo() {
     document.getElementById('star-info-box').style.display = 'none';
   }
-  
 
   if(!infoBox){
     console.error("Element #star-info-box not found")
@@ -67,7 +65,6 @@ function showStarInfo(starsData, screenX, screenY){
   // const plx = starsData.Plx   // просто берёт Plx
   // const distance = plx > 0 ? (1000 / plx).toFixed(2) : 'N/A'
   // document.getElementById('star-distance').textContent = distance
-
 
   infoBox.style.left = `${screenX}px`
   infoBox.style.top = `${screenY}px`
@@ -118,25 +115,38 @@ function handleClick (event){
 
     const index = intersects[0].index   //номер звезды
     const starsData = convertedStars[index]   //достаёт данные конкретной звезды 
-      
-      if(selectedStars.length >= 2){
-        
+    selectedStars.push({starsData, index});  // текущая звезда
+
+      if(selectedStars.length === 1){
+        showStarInfo(starsData);
+      } else if(selectedStars.length >= 2){
+        const star1 = selectedStars[0];
+        const star2 = selectedStars[1];
+
+        // возвращает размер звезды
         selectedStars.forEach(item =>{
           const sizes = starsMesh.geometry.attributes.aSize.array;
           sizes [item.index] /= 1.5;
         });
         starsMesh.geometry.attributes.aSize.needsUpdate = true;
         
-        if(connectionLine){
-          const infoBox = document.getElementById('star-info-box');
-          if (infoBox) infoBox.style.display = "none";
+        // показывает инфо-бокс второй звезды
+        showStarInfo(star2.starsData, x + 10, y - 10);
 
-          scene.remove(connectionLine);
-          connectionLine.geometry.dispose();    // удаляет данные геометрии с GPU
-          connectionLine.material.dispose();
-          connectionLine = null;
+        // рисует линию между звездами 
+        connectionLine = StarDistanceUtils.createConnectionLine(star1, star2, scene, connectionLine);
+
+        // рассчитывает дистанцию
+        const distance = StarDistanceUtils.calculateDistance(star1.starsData, star2.starsData);
+        if(distance !== undefined && distance !== null){
+          StarDistanceUtils.showDistanceBox(distance, star1, star2);
+        }else{
+          console.log('Distance cannot be calculated');
         }
+        // показывает расстояние над линией
+        StarDistanceUtils.showDistanceBox(distance, star1, star2);
 
+        // сбрасывает массив
         selectedStars = [];   // очищает старый выбор
       }
 
