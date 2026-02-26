@@ -22,20 +22,19 @@ The following diagram illustrates how user input and data files flow through the
 
 ![System Architecture Diagram](assets/dataFlow.png)
 
-Component Breakdown
-Interaction Handler: Receives clicks, rotations, and zooms; converts them into camera commands.
+**Interaction Handler:** Receives clicks, rotations, and zooms; converts them into camera commands.
 
-3D Renderer: The core Three.js engine that manages the scene, lighting, and star meshes.
+**3D Renderer:** The core Three.js engine that manages the scene, lighting, and star meshes.
 
-Data Loader: Fetches and parses CSV/JSON files, converting astronomical coordinates into 3D vectors.
+**Data Loader:** Fetches and parses CSV/JSON files, converting astronomical coordinates into 3D vectors.
 
-Data Display / Info Panel: A UI layer that updates dynamically when a star is selected by the user.
+**Data Display / Info Panel:** A UI layer that updates dynamically when a star is selected by the user.
 
 ---
 
 ## User Instructions
 
-Welcome, stargazer! Follow these steps to navigate the cosmos:
+*Welcome, stargazer! Follow these steps to navigate the cosmos:*
 
 **Launch:** Open the application in a modern browser (Chrome, Firefox, or Edge).
 
@@ -98,11 +97,11 @@ Option C (Python): Run python -m http.server.
 
 To add new features, identify the correct module:
 
-Rendering: Update main.js (Scene/Camera).
+**Rendering:** Update main.js (Scene/Camera).
 
-Data: Update data/ or the parsing logic in main.js.
+**Data:** Update data/ or the parsing logic in main.js.
 
-UI: Update style.css or the Info Panel section in index.html.
+**UI:** Update style.css or the Info Panel section in index.html.
 
 ### 5. Debugging Tips
 
