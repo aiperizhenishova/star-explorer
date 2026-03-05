@@ -54,14 +54,23 @@
       }
 
       #distance-box{
-        position: absolute;
+        position: fixed;
         display: none;
-        background: rgba(0, 0, 0, 0.7);
+        top: 5%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(30, 30, 50, 0.9);
+        border: 1px solid white;
         color: white;
-        padding: 2px 5px;
-        border-radius: 3px;
-        font-size: 12px;
+        padding: 5px 15px;
+        border-radius: 10px;
+        font-size: 20px;
+        pointer-events: none;
+        white-space: nowrap;
+        z-index: 1000;
       }
+
+  
     </style>
 
     <div id="distance-box"></div>
@@ -74,5 +83,8 @@
       <p>Distance: <span id="star-distance"></span> pc</p>
       <p>Size: <span id="star-size"></span></p>
       </div>
+
+
+    
   </body>
 </html>

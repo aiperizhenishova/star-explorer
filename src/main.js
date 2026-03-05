@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { OrbitControls, ThreeMFLoader } from 'three/examples/jsm/Addons.js'
-import { convertToXYZ } from '../convert_to_xyz'   //импортирую звезды
+import { convertToXYZ } from '../convert_to_xyz'   //импорт звезд
 import Papa from 'papaparse'
 import { color, convert, max } from 'three/tsl'
 import StarDistanceUtils from './StarDistanceUtils.js'
@@ -84,12 +84,22 @@ const raycaster = new THREE.Raycaster()
 //Без этого Raycaster для точек с маленьким размером почти никогда не срабатывает.
 raycaster.params.Points.threshold = 5
 
+function unHighLightStar(starsMesh, index){
+  selectedStars.forEach(star => {
+    const sizes = starsMesh.geometry.attributes.aSize.array;
+    sizes[star.index] /= 1.5;
+  });
+  starsMesh.geometry.attributes.aSize.needsUpdate = true;
+}
 
+// массив выбранных звезд
+let selectedStars = [];
+// let connectionLine = null;
 
 function handleClick (event){
-
   let x, y 
 
+  // координаты мыши/тачпад
   if (event.touches && event.touches.length > 0){
     //touchpad
     x = event.touches[0].clientX
@@ -103,67 +113,46 @@ function handleClick (event){
   //нормализовать координаты
   mouse.x = (x/window.innerWidth) * 2 - 1
   mouse.y = -(y/window.innerHeight) * 2 + 1
-
-  raycaster.setFromCamera(mouse, camera)
+  raycaster.setFromCamera(mouse, camera);
 
   if (!raycasterPoints) return;
-
   const intersects = raycaster.intersectObject(raycasterPoints);
+  if (intersects.length === 0)return;
 
-  //если есть пересечение берет номер этой звезды
-  if (intersects.length > 0){
-
-    const index = intersects[0].index   //номер звезды
+    const index = intersects[0].index   //индекс звезды
     const starsData = convertedStars[index]   //достаёт данные конкретной звезды 
-    selectedStars.push({starsData, index});  // текущая звезда
+    const star = {starsData, index};
 
-      if(selectedStars.length === 1){
-        showStarInfo(starsData);
-      } else if(selectedStars.length >= 2){
+    if(connectionLine){
+      scene.remove(connectionLine);
+      connectionLine.geometry.dispose();
+      connectionLine.material.dispose();
+      connectionLine = null;
+      unHighLightStar(starsMesh, index);
+      selectedStars = [];
+    }
+
+    // добавляет новую первую звезду
+    selectedStars.push(star);
+    StarDistanceUtils.highlightStar(starsMesh, index);
+    showStarInfo(starsData, x + 10, y - 10);
+
+      
+      if(selectedStars.length === 2){
         const star1 = selectedStars[0];
         const star2 = selectedStars[1];
 
-        // возвращает размер звезды
-        selectedStars.forEach(item =>{
-          const sizes = starsMesh.geometry.attributes.aSize.array;
-          sizes [item.index] /= 1.5;
-        });
-        starsMesh.geometry.attributes.aSize.needsUpdate = true;
-        
-        // показывает инфо-бокс второй звезды
-        showStarInfo(star2.starsData, x + 10, y - 10);
-
         // рисует линию между звездами 
-        connectionLine = StarDistanceUtils.createConnectionLine(star1, star2, scene, connectionLine);
+        connectionLine = StarDistanceUtils.createConnectionLine(star1, star2, starsMesh, scene, connectionLine);
 
         // рассчитывает дистанцию
-        const distance = StarDistanceUtils.calculateDistance(star1.starsData, star2.starsData);
-        if(distance !== undefined && distance !== null){
-          StarDistanceUtils.showDistanceBox(distance, star1, star2);
-        }else{
-          console.log('Distance cannot be calculated');
-        }
-        // показывает расстояние над линией
-        StarDistanceUtils.showDistanceBox(distance, star1, star2);
-
-        // сбрасывает массив
-        selectedStars = [];   // очищает старый выбор
-      }
-
-      selectedStars.push({starsData, index});
-
-      StarDistanceUtils.highlightStar(starsMesh, index);
-
-      if(selectedStars.length === 2){
-        connectionLine = StarDistanceUtils.createConnectionLine(selectedStars[0], selectedStars[1], scene, connectionLine);
-        const distance = StarDistanceUtils.calculateDistance(selectedStars[0].starsData, selectedStars[1].starsData);
-        console.log("Distance between stars: ", distance.toFixed(2), "parces");
-
-        showStarInfo(selectedStars[1].starsData, x + 10, y - 10);
-      }
-    }else{
-      const infoBox = document.getElementById('star-info-box');
-      if(infoBox) infoBox.style.display = "none";
+        const distance = StarDistanceUtils.calculateDistance(star1, star2);
+        console.log(star1.starsData, star2.starsData);
+        // показывает инфо о расстоянии
+        StarDistanceUtils.showDistanceBox(distance, star1, star2, starsMesh, camera, selectedStars);
+    
+     //console.log(selectedStars);
+     
     }
 }
   
@@ -282,7 +271,7 @@ let starsMesh;       // для Points
 let convertedStars;  // сюда сохраняются конвертированные звезды
 let raycasterPoints;
 let connectionLine = null;   // линия между ними
-let selectedStars = [];      // массив выбранных звезд
+
 
 
 fetch('/star-explorer/hipparcos-voidmain.csv')

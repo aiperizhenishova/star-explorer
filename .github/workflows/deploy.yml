@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ "master" ] # Запускать при пуше в master
+    branches: ["master"] # Запускать при пуше в master
 
 permissions:
   contents: read
@@ -20,7 +20,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm install
@@ -34,7 +34,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './dist' # Загружаем только то, что собрал Vite
+          path: "./dist" # Загружаем только то, что собрал Vite
 
       - name: Deploy to GitHub Pages
         id: deployment
