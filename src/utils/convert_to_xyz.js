@@ -30,7 +30,6 @@ class convertToXYZ {
 
 
 
-
         const plxNum = Number(star.Plx);
         if(!plxNum || plxNum <= 0) return null;
 
@@ -44,8 +43,6 @@ class convertToXYZ {
         const y = distance * Math.sin(decRad) / this.Scale
         const z = distance * Math.cos(decRad) * Math.sin(raRad) /this.Scale
 
-
-        
 
         if ([x, y, z].some(v => isNaN(v))) return null; 
 
@@ -69,7 +66,6 @@ class convertToXYZ {
     }
 
     
-
     convertAll() {
         // высчитываем дистанции прямо из Plx
         const distances = this.stars.map(star => 1000 / Number(star.Plx));
@@ -80,7 +76,6 @@ class convertToXYZ {
         return this.convertedStars;
     }
     
-
 
     getPositions(){
         if (!this.convertedStars) 

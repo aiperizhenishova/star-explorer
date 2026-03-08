@@ -1,6 +1,6 @@
 import fs from 'fs'
 import Papa from 'papaparse'
-import { distance } from 'three/tsl';
+//import { distance } from 'three/tsl';
 
 // читаем CSV с диска
 const file = fs.readFileSync('hipparcos-voidmain.csv', 'utf8')

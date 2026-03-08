@@ -1,9 +1,9 @@
 import React from 'react';
-import SearchBar from './searchBar';
-import StarCard from './starCard'
+import SearchBar from './components/searchBar';
+import StarCard from './components/starCard'
 
-import '../style.css';
-import './StarCards.css';
+import './style.css';
+import './components/StarCards.css';
 
 
 function App() {

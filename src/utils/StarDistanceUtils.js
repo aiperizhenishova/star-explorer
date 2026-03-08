@@ -37,8 +37,6 @@ static highlightStar(starsMesh, index){
     starsMesh.geometry.attributes.aSize.needsUpdate = true;
   }
 
-
-
   
   
 // расчет расстояния
@@ -56,7 +54,6 @@ static toScreenPosition(Vector3, camera) {
     y: (-vector.y + 1) / 2 * window.innerHeight
   };
 }
-
 
 
 static showDistanceBox(distance, star1, star2, starsMesh, camera, selectedStars){
