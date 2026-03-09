@@ -1,7 +1,7 @@
 import React from 'react';
 import SearchBar from './components/searchBar';
 import './style.css';
-import './components/StarCards.css';
+// import './components/StarCards.css';
 
 
 function App() {
