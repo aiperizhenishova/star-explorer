@@ -28,6 +28,13 @@ export function initScene(){
     renderer.setClearColor(0x000000, 1)
     document.body.appendChild(renderer.domElement)
 
+    const canvas = renderer.domElement;
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.xIndex = '0';
+    canvas.style.pointerEvents = 'auto';
+
     
     // === УПРАВЛЕНИЕ КАМЕРОЙ ===
     const controls = new OrbitControls(camera, renderer.domElement)

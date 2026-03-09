@@ -21,10 +21,6 @@ let selectedStars = []; // массив выбранных звезд
 // === RAYCASTER (mouse clicking, touchscreen) ===
 const mouse = new THREE.Vector2()
 const raycaster = new THREE.Raycaster() 
-
-//То есть если курсор или палец находится в пределах 5 пикселей от точки, 
-// Raycaster считает, что её выбрали.
-//Без этого Raycaster для точек с маленьким размером почти никогда не срабатывает.
 raycaster.params.Points.threshold = 5
 
 
@@ -38,11 +34,6 @@ function showStarInfo(starsData, screenX, screenY){
     event.stopPropagation();
     infoBox.style.display = 'none';
   })
-
-  // Обработчик для самого окна, чтобы клики по тексту не проходили к сцене
-  // infoBox.addEventListener('click', (event) => {
-  //   event.stopPropagation();
-  // })
 
   function hideStarInfo() {
     document.getElementById('star-info-box').style.display = 'none';

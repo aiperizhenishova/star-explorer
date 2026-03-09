@@ -10,3 +10,18 @@ html, body {
   overflow: hidden;
   background: black;
 }
+
+/* react */
+.app-container{
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.app-container > *{
+  pointer-events: auto;
+}
