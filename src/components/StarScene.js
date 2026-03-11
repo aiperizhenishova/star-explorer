@@ -26,6 +26,7 @@ export function initScene(){
     const renderer = new THREE.WebGLRenderer()
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.setClearColor(0x000000, 1)
+    renderer.setPixelRatio(1)
     document.body.appendChild(renderer.domElement)
 
     const canvas = renderer.domElement;
@@ -51,6 +52,7 @@ export function initScene(){
         camera.aspect = window.innerWidth / window.innerHeight
         camera.updateProjectionMatrix()
         renderer.setSize(window.innerWidth, window.innerHeight)
+        renderer.setPixelRatio(1)
     })
     
   return {scene, camera, renderer, controls};
