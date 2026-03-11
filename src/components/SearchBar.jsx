@@ -10,7 +10,7 @@ const SearchBar = () => {
 
     return(
         <div className="search-container" 
-            style={{background:focus ? "rgba(255, 255, 255, 0.18)" :  "rgba(255, 255, 255, 0.12)",
+            style={{background:focus ? "rgba(255, 255, 255, 0.18)" :  "rgba(255, 255, 255, 0.2)",
                     boxShadow: focus ? "0 0 0 1px rgba(255, 255, 255, 0.3" : "none",
             }}>
                 <img src={searchIcon} alt="searchIcon" className="search-icon" />
