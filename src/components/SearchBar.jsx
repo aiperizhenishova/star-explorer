@@ -8,18 +8,38 @@ const SearchBar = () => {
     const [focus, setFocus] = useState(false)
     const [value, setValue] = useState("")
 
+    const handleSearch = () =>{
+        const stars = window.convertedStars;
+        console.log('stars: ', stars)
+        console.log('value: ', value)
+        if(!stars) return;
+        
+
+        const found = stars.find(star => String(star.HIP) === value.trim());
+        console.log('found star: ', found)
+        if(!found) {alert('The star is not found!'); return}   // return останавливает код
+
+        window.controls.target.set(found.x, found.y, found.z);
+        window.camera.position.set(found.x, found.y, found.z + 500);
+        window.controls.update();
+
+    }
+
     return(
-        <div className="search-container" 
-            style={{background:focus ? "rgba(255, 255, 255, 0.18)" :  "rgba(255, 255, 255, 0.2)",
-                    boxShadow: focus ? "0 0 0 1px rgba(255, 255, 255, 0.3" : "none",
-            }}>
-                <img src={searchIcon} alt="searchIcon" className="search-icon" />
+        <div className= {`search-container ${focus ? 'focused' : ''}`}>
                 <input className= "search-input" type="text" placeholder="Search stars"
                     value={value}
                     onChange={e => setValue(e.target.value)}
                     onFocus={() => setFocus(true)}
                     onBlur={() => setFocus(false)}
-                />  
+                /> 
+                <button 
+                    onClick={handleSearch}
+                    style={{background: "none", padding:"0", border:"none", cursor:"pointer"}}>
+                        <img src={searchIcon} alt="searchIcon" className="search-icon" />
+                </button> 
+                
+
         </div>
     );
 };

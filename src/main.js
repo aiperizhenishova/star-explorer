@@ -18,6 +18,7 @@ let connectionLine = null;   // линия между ними
 let selectedStars = []; // массив выбранных звезд
 
 
+
 // === RAYCASTER (mouse clicking, touchscreen) ===
 const mouse = new THREE.Vector2()
 const raycaster = new THREE.Raycaster() 
@@ -179,6 +180,8 @@ window.addEventListener("pointerup", (e) => {
 fetch('/star-explorer/hipparcos-voidmain.csv')
   .then(res => res.text())
   .then(csvText => {
+
+    
     const result = Papa.parse(csvText, { header: true, dynamicTyping: true });
 
     // ФильтруеТ строки, чтобы RAdeg, DEdeg и Plx были числами и Plx > 0
@@ -196,6 +199,10 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
     converter.convertAll();
     convertedStars = converter.convertedStars;  // сохраняется глобально
     
+    window.convertedStars = convertedStars;
+    window.camera = camera;
+    window.controls = controls;
+
     const positions = converter.getPositions();
     const scaleFactor = 3000; //СЖАТИЕ КООРДИНАТ
     for (let i = 0; i < positions.length; i++) {
@@ -235,8 +242,7 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
     fragmentShader: starFragmentShader,
     transparent: true,
     blending: THREE.AdditiveBlending,
-    depthWrite: false,
-    vertexColor: true
+    depthWrite: false
   });
 
     
