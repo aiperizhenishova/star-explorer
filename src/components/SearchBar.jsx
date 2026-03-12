@@ -1,4 +1,4 @@
-import searchIcon from '../../assets/search.png';
+import searchIcon from '/assets/search.png'; 
 import React, { useState } from 'react';
 import './StarCards.css'
 import Background from 'three/src/renderers/common/Background.js';
