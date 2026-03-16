@@ -2,7 +2,7 @@
 
 **Interactive 3D visualization of stars using Three.js and Hipparcos Star Catalog data.**
 
-![star picture](https://raw.githubusercontent.com/aiperizhenishova/star-explorer/master/assets/star.png)
+![star picture](https://raw.githubusercontent.com/aiperizhenishova/star-explorer/master/public/assets/star.png)
 ---
 
 ## 📖 Introduction
