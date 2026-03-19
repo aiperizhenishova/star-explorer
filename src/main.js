@@ -76,6 +76,9 @@ function unHighLightStar(starsMesh, index){
 
 
 function handleClick (event){
+  if(event.target.closest('.search-container') || 
+     event.target.closest('#star-info-box')) return;
+
   let x, y 
 
   // координаты мыши/тачпад
@@ -248,6 +251,7 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
     
   starsMesh = new THREE.Points(geometry, material);
   scene.add(starsMesh);
+  window.starsMesh = starsMesh;
 
 
 
