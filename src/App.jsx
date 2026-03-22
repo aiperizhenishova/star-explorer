@@ -2,7 +2,7 @@ import React from 'react';
 import SearchBar from './components/SearchBar';
 import './style.css';
 // import './components/StarCards.css';
-
+import BottomNav from './components/BottomNav';
 
 function App() {
     return (
@@ -14,6 +14,10 @@ function App() {
             
             <div className='top-ui'>
                 <SearchBar/>
+            </div>
+
+            <div>
+                <BottomNav />
             </div>
             
         </div>

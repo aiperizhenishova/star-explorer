@@ -5,6 +5,7 @@ import StarDistanceUtils from './utils/StarDistanceUtils'
 import { initScene } from './components/StarScene'
 import { starVertexShader, starFragmentShader } from './utils/shaders'
 import { getColorBySpType, getColorFromVI } from './utils/colorUtils'
+import { ThreeMFLoader } from 'three/examples/jsm/Addons.js'
 
 
 const {scene, camera, renderer, controls} = initScene();
@@ -16,6 +17,8 @@ export let raycasterPoints;
 let convertedStars;  // сюда сохраняются конвертированные звезды
 let connectionLine = null;   // линия между ними
 let selectedStars = []; // массив выбранных звезд
+let constellationLines = [];
+let constellationsVisible = [];
 
 
 
@@ -166,6 +169,56 @@ window.addEventListener("pointerup", (e) => {
 
 
 
+function drawConstellations(){
+  const starMap = {};
+  convertedStars.forEach(star => {
+    starMap[star.HIP] = star;
+  });
+
+
+  const scale = 3000;
+  window.constellationData.forEach(constellation => {
+    constellation.lines.forEach(segment => {
+      for(let i=0; i<segment.length - 1; i++){
+        const s1 = starMap[segment[i]];
+        const s2 = starMap[segment[i+1]];
+        if (!s1 || !s2) return;
+
+        const points = [
+          new THREE.Vector3(s1.x * scale, s1.y * scale, s1.z * scale),
+          new THREE.Vector3(s2.x * scale, s2.y * scale, s2.z * scale)
+        ];
+        const geo = new THREE.BufferGeometry().setFromPoints(points);
+        const mat = new THREE.LineBasicMaterial({color:0x4444ff, opacity:0.4, transparent: true});
+        const line = new THREE.Line(geo, mat);
+        scene.add(line);
+        constellationLines.push(line);
+      }
+    });
+  });
+
+}
+
+
+
+window.toggleConstellations = function(){
+  console.log('constellationLines:', constellationLines)
+  console.log('type:', typeof constellationLines)
+  if (constellationsVisible){
+    constellationLines.forEach(line => {
+      scene.remove(line);
+      line.geometry.dispose();
+      line.material.dispose();
+    });
+    constellationLines = [];
+    constellationLines = false;
+  }else{
+    drawConstellations();
+    constellationsVisible = true;
+  }
+}
+
+
 // === СОБСТЕННОЕ ДВИЖЕНИЕ ЗВЕЗДЫ ===
 // function updateStarPositions(stars, deltaYears) {
 //   stars.forEach(star => {
@@ -211,6 +264,13 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
     for (let i = 0; i < positions.length; i++) {
       positions[i] *= scaleFactor; 
     }
+
+
+    fetch('/star-explorer/public/constellations.json')
+      .then(result => result.json())
+      .then(data => {
+        window.constellationData = data.constellations;
+      });
 
 
     
