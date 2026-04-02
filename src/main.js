@@ -81,7 +81,8 @@ function unHighLightStar(starsMesh, index){
 
 function handleClick (event){
   if(event.target.closest('.search-container') || 
-     event.target.closest('#star-info-box')) return;
+     event.target.closest('#star-info-box') ||
+     event.target.closest('.bottom-nav')) return;
 
   let x, y 
 
@@ -171,10 +172,24 @@ window.addEventListener("pointerup", (e) => {
 
 
 function drawConstellations(){
+
+  console.log('HIP type:', typeof convertedStars[0].HIP)
+  console.log('HIP value:', convertedStars[0].HIP)
+  console.log('JSON HIP:', window.constellationData[0].lines[0][0])
+  console.log('JSON HIP type:', typeof window.constellationData[0].lines[0][0])
+
+
   const starMap = {};
   convertedStars.forEach(star => {
     starMap[star.HIP] = star;
   });
+
+  let found = 0, missing = 0;
+  window.constellationData[0].lines[0].forEach(hip => {
+    if(starMap[hip]) found++;
+    else { missing++; console.log('missing HIP:', hip); }
+  });
+  console.log('found:', found, 'missing:', missing);
 
 
   const scale = 3000;
@@ -268,7 +283,7 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
       return row.RAdeg != null && row.DEdeg != null && row.Plx > 0
         && !isNaN(row.RAdeg) && !isNaN(row.DEdeg) && !isNaN(row.Plx)
         // Исключает очень яркие звёзды (Vmag < 3.0), которые слишком сильно пересвечивают центр
-        && row.Vmag != null && row.Vmag >= 3.0 && row.Vmag <= 8.0; 
+        && row.Vmag != null && row.Vmag <= 8.0; 
       });
 
 

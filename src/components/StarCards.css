@@ -1,5 +1,5 @@
 :root{
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .app-container{
@@ -23,16 +23,17 @@
     align-items: center;
     background-color: rgba(255, 255, 255, 0.12);
     gap: 0.6rem;
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    border: 0.5px solid rgba(120, 140, 255, 0.4);
     border-radius: 0.8rem;
     padding: 0.5rem 1rem;
-    width: 16rem;
+    width: 17rem;
     backdrop-filter: blur(1rem);
     transition: "background 0.2s, box-shadow 0.2s";
 }
 .search-container.focused{
-    border: 0.5px solid rgba(238, 255, 182, 0.681);
+    border: 0.5px solid rgba(120, 140, 255, 0.4);
 }
+
 
 .search-icon{
     width: 1.2rem;

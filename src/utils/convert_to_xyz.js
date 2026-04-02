@@ -37,6 +37,8 @@ class convertToXYZ {
         //считает расстояние
         const distance = star.Plx && Number(star.Plx) != 0 ? 1000 / Number(star.Plx) : NaN
 
+        // const distance = 1000 / plxNum;
+        // if(distance > 2000) return null;
 
         //преобраз в x y z
         const x = distance * Math.cos(decRad) * Math.cos(raRad) / this.Scale
@@ -68,7 +70,10 @@ class convertToXYZ {
     
     convertAll() {
         // высчитываем дистанции прямо из Plx
-        const distances = this.stars.map(star => 1000 / Number(star.Plx));
+        const distances = this.stars
+            .map(star => 1000 / Number(star.Plx))
+            // .filter(d => d > 0 && d < 2000);
+
         const maxDist = Math.max(...distances);
         this.Scale = maxDist / 100;
     
