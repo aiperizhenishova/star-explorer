@@ -9,32 +9,33 @@ const SearchBar = () => {
     const [value, setValue] = useState("")
 
     const handleSearch = () =>{
-        console.log('starsMesh:', window.starsMesh)
         const stars = window.convertedStars;
-        console.log('stars: ', stars)
-        console.log('value: ', value)
         if(!stars) return;
         
 
         const found = stars.find(star => String(star.HIP) === value.trim());
-        console.log('found star: ', found)
         if(!found) {alert('The star is not found!'); return}   // return останавливает код
 
         const scale = 3000;
         window.controls.target.set(found.x * scale, found.y * scale, found.z * scale);
-        window.camera.position.set(found.x * scale, found.y * scale, found.z * scale + 50);
+        window.camera.position.set(found.x * scale, found.y * scale, found.z * scale + 200);
         window.controls.update();
-
+        window.showSearchRing(found.x * scale, found.y * scale, found.z * scale);
+        
 
         const index = stars.indexOf(found);
-        window.StarDistanceUtils_highlight = index;
+        // window.StarDistanceUtils_highlight = index;
 
         const sizes = window.starsMesh.geometry.attributes.aSize.array;
-        sizes[index] *= 4;
-        window.starsMesh.geometry.attributes.aSize.needsUpdate = true;
+        // sizes[index] *= 4;
+        // window.starsMesh.geometry.attributes.aSize.needsUpdate = true;
 
-        let growing = false;
-        setInterval(() => {
+        const originalSize = found.Size;
+
+        if(pulseRef.current) clearInterval(pulseRef.current);
+
+        let growing = true;
+        pulseRef.current = setInterval(() => {
             const sizes = window.starsMesh.geometry.attributes.aSize.array;
             if(growing){
                 sizes[index] *= 1.05;
@@ -44,7 +45,7 @@ const SearchBar = () => {
             if(sizes[index] > found.Size * 12) growing = false;
             if(sizes[index] < found.Size * 8) growing = true;
             window.starsMesh.geometry.attributes.aSize.needsUpdate = true;
-        }, 5);
+        }, 50);
 
     }
 

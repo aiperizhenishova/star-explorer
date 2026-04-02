@@ -18,7 +18,8 @@ let convertedStars;  // сюда сохраняются конвертирова
 let connectionLine = null;   // линия между ними
 let selectedStars = []; // массив выбранных звезд
 let constellationLines = [];
-let constellationsVisible = [];
+let constellationsVisible = false;
+let searchRing = null;
 
 
 
@@ -200,10 +201,32 @@ function drawConstellations(){
 }
 
 
+window.showSearchRing = function(x, y, z) {
+  if(searchRing) {
+      scene.remove(searchRing);
+      searchRing.geometry.dispose();
+      searchRing.material.dispose();
+      searchRing = null;
+  }
+
+  const geometry = new THREE.RingGeometry(8, 11, 64);
+  const material = new THREE.MeshBasicMaterial({
+      color: 0x88aaff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.9
+  });
+
+  searchRing = new THREE.Mesh(geometry, material);
+  searchRing.position.set(x, y, z);
+  searchRing.lookAt(camera.position);
+  scene.add(searchRing);
+}
+
+
+
 
 window.toggleConstellations = function(){
-  console.log('constellationLines:', constellationLines)
-  console.log('type:', typeof constellationLines)
   if (constellationsVisible){
     constellationLines.forEach(line => {
       scene.remove(line);
@@ -354,6 +377,7 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
 function animate(){
   requestAnimationFrame(animate)
   controls.update()
+  if(searchRing) searchRing.lookAt(camera.position);
   renderer.render(scene, camera)
   
 }
