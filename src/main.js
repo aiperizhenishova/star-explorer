@@ -271,7 +271,7 @@ window.toggleConstellations = function(){
 
 
 
-fetch('/star-explorer/hipparcos-voidmain.csv')
+fetch('/hipparcos-voidmain.csv')
   .then(res => res.text())
   .then(csvText => {
 
@@ -304,7 +304,7 @@ fetch('/star-explorer/hipparcos-voidmain.csv')
     }
 
 
-    fetch('/star-explorer/public/constellations.json')
+    fetch('/constellations.json')
       .then(result => result.json())
       .then(data => {
         window.constellationData = data.constellations;
