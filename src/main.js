@@ -6,6 +6,7 @@ import { initScene } from './components/StarScene'
 import { starVertexShader, starFragmentShader } from './utils/shaders'
 import { getColorBySpType, getColorFromVI } from './utils/colorUtils'
 import { ThreeMFLoader } from 'three/examples/jsm/Addons.js'
+import { loadStarsCSV } from './utils/loadStars.js';
 
 
 const {scene, camera, renderer, controls} = initScene();
@@ -34,15 +35,7 @@ function showStarInfo(starsData, screenX, screenY){
   const infoBox = document.getElementById('star-info-box')
   const closeBtn = document.getElementById('close-info')
 
-  // Обработчик для кнопки закрытия
-  closeBtn.addEventListener('click', (event) =>{
-    event.stopPropagation();
-    infoBox.style.display = 'none';
-  })
 
-  function hideStarInfo() {
-    document.getElementById('star-info-box').style.display = 'none';
-  }
 
   if(!infoBox){
     console.error("Element #star-info-box not found")
@@ -79,69 +72,88 @@ function unHighLightStar(starsMesh, index){
 
 
 
-function handleClick (event){
+function handleClick(event){
   if(event.target.closest('.search-container') || 
      event.target.closest('#star-info-box') ||
      event.target.closest('.bottom-nav')) return;
 
-  let x, y 
 
-  // координаты мыши/тачпад
+  
+     
+  let x, y 
   if (event.touches && event.touches.length > 0){
-    //touchpad
     x = event.touches[0].clientX
     y = event.touches[0].clientY
-  }else{
-     //mouse
+  } else {
     x = event.clientX
     y = event.clientY
   }
 
-  //нормализовать координаты
   mouse.x = (x/window.innerWidth) * 2 - 1
   mouse.y = -(y/window.innerHeight) * 2 + 1
   raycaster.setFromCamera(mouse, camera);
 
   if (!raycasterPoints) return;
   const intersects = raycaster.intersectObject(raycasterPoints);
-  if (intersects.length === 0)return;
+  
+  
+  if (intersects.length === 0) {
+    clearSelection();
+    return;
+  }
 
-    const index = intersects[0].index   //индекс звезды
-    const starsData = convertedStars[index]   //достаёт данные конкретной звезды 
-    const star = {starsData, index};
 
-    if(connectionLine){
-      scene.remove(connectionLine);
-      connectionLine.geometry.dispose();
-      connectionLine.material.dispose();
-      connectionLine = null;
-      unHighLightStar(starsMesh, index);
-      selectedStars = [];
-    }
+  const index = intersects[0].index
+  const starsData = convertedStars[index]
+  const star = {starsData, index};
 
-    // добавляет новую первую звезду
-    selectedStars.push(star);
-    StarDistanceUtils.highlightStar(starsMesh, index);
-    showStarInfo(starsData, x + 10, y - 10);
+  
+  if (selectedStars.length >= 2) {
+    clearSelection();
+  }
 
-      
-      if(selectedStars.length === 2){
-        const star1 = selectedStars[0];
-        const star2 = selectedStars[1];
+  selectedStars.push(star);
+  StarDistanceUtils.highlightStar(starsMesh, index);
+  showStarInfo(starsData, x + 10, y - 10);
 
-        // рисует линию между звездами 
-        connectionLine = StarDistanceUtils.createConnectionLine(star1, star2, starsMesh, scene, connectionLine);
 
-        // рассчитывает дистанцию
-        const distance = StarDistanceUtils.calculateDistance(star1, star2);
-        console.log(star1.starsData, star2.starsData);
-        // показывает инфо о расстоянии
-        StarDistanceUtils.showDistanceBox(distance, star1, star2, starsMesh, camera, selectedStars);
-    
-     //console.log(selectedStars);
-     
-    }
+  if (selectedStars.length === 2) {
+    const star1 = selectedStars[0];
+    const star2 = selectedStars[1];
+    connectionLine = StarDistanceUtils.createConnectionLine(star1, star2, starsMesh, scene, connectionLine);
+    const distance = StarDistanceUtils.calculateDistance(star1, star2);
+    StarDistanceUtils.showDistanceBox(distance, star1, star2, starsMesh, camera, selectedStars);
+  }
 }
+
+
+function clearSelection() {
+  if (starsMesh) {
+    selectedStars.forEach(star => {
+      const sizes = starsMesh.geometry.attributes.aSize.array;
+      sizes[star.index] /= 1.5;
+    });
+    starsMesh.geometry.attributes.aSize.needsUpdate = true;
+  }
+
+  if (connectionLine) {
+    scene.remove(connectionLine);
+    connectionLine.geometry.dispose();
+    connectionLine.material.dispose();
+    connectionLine = null;
+  }
+
+  // убирает distance box
+  const distanceInfoBox = document.getElementById('distance-box');
+  if (distanceInfoBox) distanceInfoBox.style.display = 'none';
+
+  // убирает infobox
+  const infoBox = document.getElementById('star-info-box');
+  if (infoBox) infoBox.style.display = 'none';
+
+  selectedStars = [];
+}
+window.clearSelection = clearSelection;
   
 
 
@@ -224,20 +236,33 @@ window.showSearchRing = function(x, y, z) {
       searchRing = null;
   }
 
-  const geometry = new THREE.RingGeometry(8, 11, 64);
-  const material = new THREE.MeshBasicMaterial({
-      color: 0x88aaff,
-      side: THREE.DoubleSide,
+  // создаём canvas с градиентом
+  const canvas = document.createElement('canvas');
+  canvas.width = 128;
+  canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  
+  const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gradient.addColorStop(0, 'rgba(180, 200, 255, 0.9)');  // центр яркий
+  gradient.addColorStop(0.3, 'rgba(120, 150, 255, 0.4)'); // середина
+  gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');           // края прозрачные
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 128, 128);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({
+      map: texture,
       transparent: true,
-      opacity: 0.9
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
   });
 
-  searchRing = new THREE.Mesh(geometry, material);
+  searchRing = new THREE.Sprite(material);
   searchRing.position.set(x, y, z);
-  searchRing.lookAt(camera.position);
+  searchRing.scale.setScalar(60); // размер свечения
   scene.add(searchRing);
 }
-
 
 
 
@@ -249,7 +274,7 @@ window.toggleConstellations = function(){
       line.material.dispose();
     });
     constellationLines = [];
-    constellationLines = false;
+    constellationsVisible = false;
   }else{
     drawConstellations();
     constellationsVisible = true;
@@ -257,24 +282,9 @@ window.toggleConstellations = function(){
 }
 
 
-// === СОБСТЕННОЕ ДВИЖЕНИЕ ЗВЕЗДЫ ===
-// function updateStarPositions(stars, deltaYears) {
-//   stars.forEach(star => {
-//       const factor = 0.01; // масштаб движения для сцены
-//       star.x += star.pmRA * factor * deltaYears;
-//       star.y += star.pmDE * factor * deltaYears;
-//   });
-// }
+// === ЗАГРУЗКА HIPPARCOS ===
 
-
-// === ЗАГРУЗКА CSV HIPPARCOS ===
-
-
-
-fetch('/hipparcos-voidmain.csv')
-  .then(res => res.text())
-  .then(csvText => {
-
+loadStarsCSV().then(csvText => {
     
     const result = Papa.parse(csvText, { header: true, dynamicTyping: true });
 
@@ -286,7 +296,8 @@ fetch('/hipparcos-voidmain.csv')
         && row.Vmag != null && row.Vmag <= 8.0; 
       });
 
-
+    console.log('звёзд после фильтра:', starsData.length);  // ← добавь это
+    console.log('первая звезда:', starsData[0]);
 
     // Конвертация в XYZ
     const converter = new convertToXYZ(starsData);
@@ -332,7 +343,7 @@ fetch('/hipparcos-voidmain.csv')
 
 
 
-      sizes[i] = (5 / (star.Vmag + 0.1)) * 5; // визуально крупнее и Size: 5 / (star.Vmag + 0.1) // создали размер звезды
+      sizes[i] = Math.min((5 / (star.Vmag + 0.1)) * 5, 15); // визуально крупнее и Size: 5 / (star.Vmag + 0.1) // создали размер звезды
       
     }
     geometry.setAttribute('acolor', new THREE.BufferAttribute(colors, 3))
@@ -365,26 +376,6 @@ fetch('/hipparcos-voidmain.csv')
   raycasterPoints = new THREE.Points(rayGeometry, rayMat);
   scene.add(raycasterPoints);
   });
-
-
-
-  function worldToScreen (position, camera, renderer){
-    const vector = position.clone().project(camera)
-
-    const x = (vector.x * 0.5 + 0.5) * renderer.domElement.clientWidth;
-    const y = ( -vector.y * 0.5 + 0.5) * renderer.domElement.clientHeight;
-
-    return{x, y}
-  }
-
-
-  const infoBox = document.getElementById('star-info-box')
-  const closeBtn = document.getElementById('close-info')
-
-  closeBtn.addEventListener('click', (event) => {
-    event.stopPropagation()          // клик не идёт к сцене → Raycaster не срабатывает
-    infoBox.style.display = 'none'   //скрывает окно полностью
-  })
 
 
   

@@ -1,11 +1,9 @@
 import * as THREE from 'three';
-import { ThreeMFLoader } from 'three/examples/jsm/Addons.js';
-import { cameraFar, distance } from 'three/tsl';
 
 export default class StarDistanceUtils{
 
   
-// === создание линии между 2 звездами ===
+// создание линии между 2 звездами
 static createConnectionLine(star1, star2, starsMesh, scene, connectionLine){
     const position1 = starsMesh.geometry.attributes.position.array.slice(star1.index*3,star1.index*3+3);
     const position2 = starsMesh.geometry.attributes.position.array.slice(star2.index*3,star2.index*3+3);
@@ -30,7 +28,7 @@ static createConnectionLine(star1, star2, starsMesh, scene, connectionLine){
   
   }
   
-// === подсвечивает выбранные звезды ===
+// подсвечивает выбранные звезды 
 static highlightStar(starsMesh, index){
     const sizes = starsMesh.geometry.attributes.aSize.array;
     sizes[index] *= 1.5;
@@ -67,17 +65,19 @@ static showDistanceBox(distance, star1, star2, starsMesh, camera, selectedStars)
   const position2 = starsMesh.geometry.attributes.position.array.slice(star2.index*3,star2.index*3+3);
   
   const mid3D = new THREE.Vector3(
-    (position1[0] + position2[0] / 2),
-    (position1[1] + position2[1] / 2),
-    (position1[2] + position2[2] / 2)
+    (position1[0] + position2[0]) / 2,
+    (position1[1] + position2[1]) / 2,
+    (position1[2] + position2[2]) / 2
   );
   const screen = StarDistanceUtils.toScreenPosition(mid3D, camera);
 
   // const starHIP1 = selectedStars[0];
   // const starHIP2 = selectedStars[1];
 
+
+  document.getElementById('distance-text').textContent = 
+    `Distance between ${selectedStars[0].starsData.HIP} and ${selectedStars[1].starsData.HIP}: ${distance.toFixed(3)}pc ~ ${distanceLy.toFixed(2)}ly ~ ${(distanceKm / 1e9).toFixed(1)} billion km`;
   distanceInfoBox.style.display = 'block';
-  distanceInfoBox.innerText = `Distance between ${selectedStars[0].starsData.HIP}  and ${selectedStars[1].starsData.HIP}: ${distance.toFixed(3)}pc ~ ${distanceLy.toFixed(2)}ly ~ ${(distanceKm / 1e9).toFixed(1)} billion km`;
 }
 
 }
